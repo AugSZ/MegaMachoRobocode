@@ -116,3 +116,6 @@ long time = (long)(enemy.getDistance() / bulletSpeed);
 
 ## 00:49
 Infelizmente eu trabalho amanhã, e fiquei com muita dor de cabeça pensando em como usar o ADvancedEnemyRobot para conseguir informações do inimigo. Mas tem jeito mais simples e mais clean. É dó definir uma variável double com 0 no começo do código. Dentro do onScanned, definimos valor a ela. Esse valor vai ser armazenado e reutilizado durante todo o código. Mais fácil
+
+## 01:18
+Terminei. Vou dormir
