@@ -1,7 +1,8 @@
-package variante;
+package MegaMachoRobocode.variante;
 
 import robocode.*;
 import java.awt.*;
+import static robocode.util.Utils.normalRelativeAngleDegrees;
 
 /**
  * EpsilonGamma - έψιλον - Epsilon V4.2
@@ -18,9 +19,15 @@ import java.awt.*;
  * - V4: o calculo de futura localização tem problema com a velocidade inicial na formula da previsão da localização. Ideia é simplificar e considerar a velocidade inicial como a mesma sendo localizada. A diferença pode ser diluída com aproximação
  * 
  */
-public class EpsilonAlpha extends AdvancedRobot {
+public class EpsilonGamma extends AdvancedRobot {
+
+    private AdvancedEnemyBot enemy = new AdvancedEnemyBot();
+    
     // Multiplicador de direção para movimento (-1 ou 1)
     int moveDirection = 1;
+
+    // define o FirePower de acordo com a distância, evitando poder máximo desnecessário. Testar depois para ver com poder máximo
+    double lastFirePower = Math.min(400/enemy.getDistance(), 3);
     
     // Monitora o nível de energia anterior do inimigo para detectar tiros
     double previousEnemyEnergy = 100;
@@ -42,6 +49,44 @@ public class EpsilonAlpha extends AdvancedRobot {
         
         // Movimento inicial do radar
         turnRadarRightRadians(Double.POSITIVE_INFINITY);
+    }
+
+    public double SeCorrerOBichoPega() {
+        // Velocidade da bala baseada na potência do tiro
+        double bulletSpeed = 20 - 3 * lastFirePower;
+		//posicao atual do robo
+ 		double myX = getX();
+    	double myY = getY();
+               
+        // Posição atual do inimigo em coordenadas absolutas
+    	double anguloAbsolutoInimigo = getHeading() + enemyBearing;
+    	double enemyX = myX + Math.sin(Math.toRadians(anguloAbsolutoInimigo)) * enemyDistance;
+    	double enemyY = myY + Math.cos(Math.toRadians(anguloAbsolutoInimigo)) * enemyDistance;;
+		
+		//velocidade e direcao do adversario
+		double headingRad = Math.toRadians(enemyHeading); // direção atual do inimigo em radianos
+    	double velocity = enemyVelocity;                  // velocidade atual do inimigo
+	
+		// ===== INICIALIZAÇÃO DA POSIÇÃO FUTURA =====
+    	double futuroX = enemyX;
+    	double futuroY = enemyY;
+		   
+        // Simula o movimento do inimigo por ticks até a bala alcançar
+   		double deltaTime = 1; // passo de 1 tick
+    	for (double t = 0; t * bulletSpeed < Point2D.distance(myX, myY, futuroX, futuroY); t += deltaTime) {
+        	// Atualiza posição futura com base na velocidade e direção do inimigo
+        	futuroX += Math.sin(headingRad) * velocity * deltaTime;
+        	futuroY += Math.cos(headingRad) * velocity * deltaTime;
+
+        	// Limita a posição futura para não sair do campo de batalha
+        	futuroX = Math.max(Math.min(futuroX, getBattleFieldWidth() - 18), 18);
+        	futuroY = Math.max(Math.min(futuroY, getBattleFieldHeight() - 18), 18);
+    }
+        // Calcula o ângulo para a posição futura
+    	double anguloParaFuturo = Math.toDegrees(Math.atan2(futuroX - myX, futuroY - myY));
+        
+        // Retorna o quanto precisa girar o canhão
+    	return normalRelativeAngleDegrees(anguloParaFuturo - getGunHeading());
     }
 
     /**

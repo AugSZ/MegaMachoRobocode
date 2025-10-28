@@ -2,6 +2,7 @@ package variante;
 
 import robocode.*;
 import java.awt.*;
+import java.awt.geom.Point2D;
 
 /**
  * EpsilonAlpha - Versáo 4 - considerar Epsilon Gamma
@@ -21,6 +22,14 @@ public class EpsilonAlpha extends AdvancedRobot {
     
     // Monitora o nível de energia anterior do inimigo para detectar tiros
     double previousEnemyEnergy = 100;
+
+    /* == == ==
+     * variáveis que, no momento estão zeradas, mas no primeiro scan, recerebão valor adequado
+     */
+    double enemyVelocity = 0;
+    double enemyBearing = 0;
+    double enemyHeading = 0;
+    double distance = 0;
 
     /**
      * Método principal - Inicializa configurações e comportamento do robô
@@ -42,8 +51,67 @@ public class EpsilonAlpha extends AdvancedRobot {
     }
 
     // vou precisar disso aqui
-    public double SeCorrerOBichoPega() {
+    public double onFutureBullet() {
 
+        double meuX = getX();
+        double meuY = getY();
+
+        /* ==========================
+        * Distance = rate * time
+        * Para prever a posição inimiga, precisamos saber quando o tiro chega lá 
+        ========================== */
+         
+        // calculate firepower based on distance
+        double power = Math.min(500 / distance, 3);
+        // calculate speed of bullet
+        double bulletSpeed = 20 - power * 3;
+        // distance = rate * time, solved for time
+        long time = (long)(distance / bulletSpeed);
+
+        /* ==========
+         * Retendo a posição do inimigo em AbsBearing, ou seja, angulo absoluto, sem estar relacionado a outro, permitindo liberdade na movimentação e calculo
+         ========== */ 
+    	double anguloAbsolutoInimigo = getHeadingRadians() + enemyBearing;
+        double inimigoX = getX() + Math.sin(anguloAbsolutoInimigo) * distance;
+        double inimigoY = getY() + Math.cos(anguloAbsolutoInimigo) * distance;
+
+        /*
+         * Definindo a velocidade do inimigo
+         */
+
+         //velocidade do inimigo no momento da captura
+        double velocidade = enemyVelocity;
+        //heading direction do inimigo da qual está apontado, nesse caso, transformado em radianos para facilitar os calculos                  
+		double headingEmRad = Math.toRadians(enemyHeading);
+    	
+	
+		/* ============
+         * Calculos definindo as posições futuras do inimigo
+         ============*/
+
+        // Aqui, ao envez de cometer o erro anterior de pegar o X e Y inimigo separado e guardá-los, posso pegar inicialmente, e usá-los nas equações, e só depois, atribuir valor
+    	double futuroX = inimigoX;
+    	double futuroY = inimigoY;
+		   
+        /*  
+        Aqui confesso ter colado do gepeteco, calcular o movimento a cada espaço de tempo delimitado do jogo, o tick
+        */
+        // simula futuro com passo 1 tick (mantive sua abordagem de simulação)
+   		double step = 1.0; 
+    	while (Point2D.distance(meuX, meuY, futuroX, futuroY) > bulletSpeed * step) {
+            futuroX += Math.sin(headingEmRad) * velocidade * step;
+            futuroY += Math.cos(headingEmRad) * velocidade * step;
+            // prende dentro da arena
+            futuroX = Math.max(Math.min(getBattleFieldWidth() - 18, futuroX), 18);
+            futuroY = Math.max(Math.min(getBattleFieldHeight() - 18, futuroY), 18);
+            // avança tempo virtual
+            // (repete até a bala alcançar)
+        }
+        // Define angulo para os x e y fo inimigo preditados
+    	double angleToFutureDeg = Math.toDegrees(Math.atan2(futuroX - meuX, futuroY - meuY));
+        
+        // turnAmnt 
+    	return robocode.util.Utils.normalRelativeAngleDegrees(angleToFutureDeg - getGunHeading());
     }
 
     /**
@@ -53,7 +121,9 @@ public class EpsilonAlpha extends AdvancedRobot {
     public void onScannedRobot(ScannedRobotEvent e) {
 
 		double power = 3;
-
+        enemyVelocity = e.getVelocity();
+        enemyBearing = e.getBearing();
+        distance = e.getDistance();
 
 
         // Cálculo dos ângulos de mira
@@ -73,73 +143,34 @@ public class EpsilonAlpha extends AdvancedRobot {
         }
         previousEnemyEnergy = e.getEnergy();
         
+
+    
         // Velocidade aleatória para evitar previsibilidade
         if (Math.random() > .6) {
             setMaxVelocity((12 * Math.random()) + 12);
         }
-			// formula: St = S0 + v  * t
-			// st posição final, s0 posição inicial, v velocidade, t tempo. Velocidade constante
+		
+        
 
-			// formula: St = S0 + v0*t+(1/2)*a*Math.pow(t,2)
-
-		double meuX = getX();
-		double meuY = getY();
-
-		// posicao atual do robo inimigo (S0)
-		double angle = Math.toRadians(getHeading() + e.getBearing());
-		double Xdeles = getX() + Math.sin(angle) * e.getDistance();
-		double Ydeles = getY() + Math.cos(angle) * e.getDistance();
-		double Xinicial = 0;
-        double Yinicial = 0;
-		double velocidadeInicial = 0;
-		double aceleracao;
-		double tempoInicial = 0;
-		boolean detectado = false;
-
-		// informações iniciais do primeiro scan
-		if (!detectado) {
-        Xinicial = Xdeles;
-        Yinicial = Ydeles;
-        velocidadeInicial = e.getVelocity();
-        aceleracao = 0;
-        tempoInicial = getTime(); // tempo do primeiro scan
-        detectado = true;
-    	}
-	
-		// Calcular aceleração média desde a última detecção
-        double novaVelocidade = e.getVelocity();
-        double deltaV = novaVelocidade - velocidadeInicial;
-        double deltaT = getTime() - tempoInicial;
-        aceleracao = deltaV / deltaT;
-
-		// calculo velocidade da bala
-		double velocidadeBala = 20-3*power;
-		//calculo prever posição
-		double t = e.getDistance()/velocidadeBala;
-		double posicaoFinal = velocidadeInicial * t + 0.5 * aceleracao * Math.pow(t,2);
-		double futuroX = Xinicial + Math.sin(anguloAbsoluto) * posicaoFinal;
-    	double futuroY = Yinicial + Math.cos(anguloAbsoluto) * posicaoFinal;
         // Comportamento de combate baseado na distância
         if (e.getDistance() > 150) {
     		// Engajamento a longa distância mirando na posição futura
-    		double dx = futuroX - meuX;
-    		double dy = futuroY - meuY;
-    		double anguloFuturo = Math.atan2(dx, dy);
-
-    		gunTurnAmt = robocode.util.Utils.normalRelativeAngle(anguloFuturo - getGunHeadingRadians());
-    		setTurnGunRightRadians(gunTurnAmt);
+            double gunTurnPreditivo = onFutureBullet();
+    		gunTurnAmt = robocode.util.Utils.normalRelativeAngle(anguloAbsoluto - getGunHeadingRadians() + latVel / 22);
+    		setTurnGunRight(gunTurnPreditivo);
 
     		setTurnRightRadians(robocode.util.Utils.normalRelativeAngle(anguloAbsoluto - getHeadingRadians() + latVel / getVelocity()));
     		setAhead((e.getDistance() - 140) * moveDirection);
-    		setFire(power);
+    		setFire(power); // ai ai tiro ai ai dói
 		}
  		else {
             // Engajamento a curta distância
+            double gunTurnPreditivo = onFutureBullet();
             gunTurnAmt = robocode.util.Utils.normalRelativeAngle(anguloAbsoluto - getGunHeadingRadians() + latVel / 15);
-            setTurnGunRightRadians(gunTurnAmt);
+            setTurnGunRight(gunTurnPreditivo);
             setTurnLeft(-90 - e.getBearing());
             setAhead((e.getDistance() - 140) * moveDirection);
-            setFire(power);
+            setFire(power); // ai ai tiro ai ai dói
         }
     }
 
