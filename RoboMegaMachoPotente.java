@@ -373,13 +373,13 @@ public class RoboMegaMachoPotente extends AdvancedRobot {
     // MÉTODOS DE COMBATE
     // =======================
     private void definirCorCombate() {
-    	Color roxo = new Color(0, 75, 67);
-    	setColors(roxo, roxo, roxo, roxo, roxo);
+    	Color verdeMusgo = new Color(0, 75, 67);
+    	setColors(verdeMusgo, verdeMusgo, verdeMusgo, verdeMusgo, verdeMusgo);
 	}
 
 	private void definirCorPadrao() {
-    	Color roxo = new Color(0, 75, 67);
-    	setColors(roxo, roxo, roxo, roxo, roxo);
+    	Color verdeMusgo = new Color(0, 75, 67);
+    	setColors(verdeMusgo, verdeMusgo, verdeMusgo, verdeMusgo, verdeMusgo);
 	}
 
     /**
