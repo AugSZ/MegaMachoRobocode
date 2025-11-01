@@ -325,9 +325,9 @@ public class Herobrine extends AdvancedRobot {
     // EVENTOS DO ROBOCODE
     // =======================
     public void onWin(WinEvent event) {
-        // Animação/sinal de vitória: gira radar e usa cores padrão
+        // Animação/sinal de vitória: gira radar
         while (true) {
-            definirCorPadrao();
+            
             turnRadarRight(360);
         }
     }
@@ -337,8 +337,10 @@ public class Herobrine extends AdvancedRobot {
         if (listaInimigos.containsKey(event.getName()))
             listaInimigos.get(event.getName()).vivo = false;
 
-        if (event.getName().equals(alvo.nome))
+        if (event.getName().equals(alvo.nome)) {
             alvo.vivo = false;
+        }
+        definirCorKill();
     }
 
     /**
@@ -441,20 +443,20 @@ public class Herobrine extends AdvancedRobot {
     // =======================
     // Define a cor do robô em combate (apenas estética)
     private void definirCorCombate() {
-        setColors(new Color(255, 255, 255),
-                new Color(0, 0, 0),
-                new Color(255, 255, 255),
-                new Color(0, 0, 0),
-                new Color(255, 255, 255));
+        setColors(new Color(9, 121, 110), //Cor do corpo
+                new Color(0, 0, 0), //Gor do canhao
+                new Color(9, 121, 110), //radarColor
+                new Color(204, 204, 255), // bulletColor
+                new Color(68, 223, 208)); // Cor do arco de radar
     }
 
     // Define a cor padrão do robô (usada ao ganhar)
-    private void definirCorPadrao() {
-        setColors(new Color(255, 255, 255),
-                new Color(0, 0, 0),
-                new Color(255, 255, 255),
-                new Color(0, 0, 0),
-                new Color(255, 255, 255));
+    private void definirCorKill() {
+        setColors(new Color(255, 0, 0), // Gor do corpo
+                new Color(0, 0, 0), // Cor do canhão
+                new Color(255, 0, 0), // Cor do radar
+                new Color(204, 204, 255), // Cor cor do tiro
+                new Color(255, 0, 0)); // Cor do arco de radar
     }
 
     /**

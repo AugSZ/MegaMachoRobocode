@@ -1,2 +1,6 @@
 {
+"java.project.referencedLibraries": [
+    "lib/**/*.jar",
+    "C:/robocode/libs/robocode.jar"    
+]
 }
