@@ -1,4 +1,4 @@
-package MegaPotente;
+package Boss;
 
 import java.awt.Color;
 import java.awt.geom.Point2D;
@@ -20,7 +20,7 @@ import robocode.util.Utils;
  * compreensível para um leitor leigo — explicam a finalidade das partes
  * principais sem alterar a lógica do robô.
  */
-public class Herobrine extends AdvancedRobot {
+public class Talikda extends AdvancedRobot {
 
     // =======================
     // VARIÁVEIS GERAIS
